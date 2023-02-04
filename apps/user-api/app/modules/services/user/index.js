@@ -2,7 +2,11 @@ const Validator = require('../../../helpers/validateSchema');
 const { UserModel } = require('../../models');
 const { UserRepository, CacheRepository } = require('../../repositories');
 const { GenHashPassword, VerifyHashPassword } = require('../../../libraries/encrypting/AEAD');
-const { UnprocessableEntityError, BadRequestError, NotFoundError } = require('../../../helpers/exceptions');
+const {
+    UnprocessableEntityError,
+    BadRequestError,
+    NotFoundError
+} = require('../../../helpers/exceptions');
 
 const userData = (payload, other = {}, isUpdate = false) => {
     const now = new Date();
@@ -20,7 +24,7 @@ const userData = (payload, other = {}, isUpdate = false) => {
 
 const Services = {
     createUser: async (payload) => {
-        const user = await Validator.validateSchema(payload, UserModel.POST);       
+        const user = await Validator.validateSchema(payload, UserModel.POST);
 
         const infoLogin = GenHashPassword(payload.password);
         let dataUser = userData(user, { infoLogin });
@@ -32,20 +36,20 @@ const Services = {
         const user = await Validator.validateSchema(payload, UserModel.PUT);
 
         const dataUser = userData(user, false);
-        
+
         return await UserRepository.update(IdentityNumber, dataUser);
     },
 
-    getUser: async (IdentityNumber) => {
-        const user = await UserRepository.getByUserByIdentityNumber(IdentityNumber);
+    getUserByIdentityNumber: async (IdentityNumber) => {
+        const user = await UserRepository.getUserByIdentityNumber(IdentityNumber);
         if (!user) {
             throw new NotFoundError('User not found!');
         }
         return user;
     },
 
-    getUserBy: async (query, options) => {
-        const user = await UserRepository.findUser(query, options);
+    getUserByAccountNumber: async (accountNumber, options) => {
+        const user = await UserRepository.getUserByAccountNumber(accountNumber, options);
         if (!user) {
             throw new NotFoundError('User not found!');
         }
@@ -63,7 +67,7 @@ const Services = {
     },
 
     getTableUsers: async (query) => {
-        const searchAbleFields = ["userName", "accountNumber", "emailAddress", "identityNumber"]
+        const searchAbleFields = ['userName', 'accountNumber', 'emailAddress', 'identityNumber'];
 
         const projection = {
             userName: 1,
@@ -80,7 +84,7 @@ const Services = {
         const userCredential = await Validator.validateSchema(payload, UserModel.PATCH);
 
         const filter = { projection: { infoLogin: 1 } };
-        const getUser = await UserRepository.getByUserByAccountNumber(IdentityNumber, filter);
+        const getUser = await UserRepository.getUserByAccountNumber(IdentityNumber, filter);
         const isPasswordValid = VerifyHashPassword(getUser.infoLogin, userCredential.password);
 
         if (!isPasswordValid) {
@@ -90,7 +94,7 @@ const Services = {
         const newPassword = await GenHashPassword(userCredential.newPassword);
 
         const { value } = await UserRepository.update(IdentityNumber, {
-            infoLogin: newPassword,
+            infoLogin: newPassword
         });
         return value;
     },
@@ -101,7 +105,7 @@ const Services = {
             throw new BadRequestError('User not found');
         }
         return value;
-    },
+    }
 };
 
 module.exports = Services;

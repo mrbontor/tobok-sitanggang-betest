@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "refreshToken": {
+            "type": "string",
+            "errorMessage": {
+                "type": "refreshToken's is not valid!"
+            },
+            "default": ""
+        },
+        "allDevices": {
+            "type": "boolean",
+            "enum": [true, false],
+            "default": false,
+            "errorMessage": {
+                "type": "allDevices should be boolean",
+                "enum": "Only allowed true or false"
+            }
+        },
+        "deviceId": {
+            "type": ["string", "null"],
+            "minLength": 6,
+            "format": "uuid",
+            "default": null,
+            "errorMessage": {
+                "minLength": "deviceId should be greater than 6",
+                "format": "deviceId's format is not valid!"
+            }
+        },
+        "ipAddress": {
+            "type": "string",
+            "errorMessage": {
+                "type": "ipAddress's is not valid!"
+            }
+        },
+        "userAgent": {
+            "type": "string",
+            "errorMessage": {
+                "type": "userAgent must be string!"
+            }
+        }
+    },
+    "additionalProperties": false,
+    "errorMessage": {
+        "type": "should be an object"
+    }
+}

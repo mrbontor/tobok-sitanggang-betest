@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["refreshToken"],
+    "properties": {
+        "refreshToken": {
+            "type": "string",
+            "errorMessage": {
+                "type": "refreshToken's is not valid!"
+            }
+        },
+        "deviceId": {
+            "type": ["string", "null"],
+            "minLength": 6,
+            "format": "uuid",
+            "default": null,
+            "errorMessage": {
+                "minLength": "deviceId should be greater than 6",
+                "format": "deviceId's format is not valid!"
+            }
+        },
+        "ipAddress": {
+            "type": "string",
+            "errorMessage": {
+                "type": "ipAddress's is not valid!"
+            }
+        },
+        "userAgent": {
+            "type": "string",
+            "errorMessage": {
+                "type": "userAgent must be string!"
+            }
+        }
+    },
+
+    "additionalProperties": false,
+    "errorMessage": {
+        "type": "should be an object",
+        "required": {
+            "refreshToken": "RefreshToken is required"
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["accountNumber", "password"],
+    "properties": {
+        "accountNumber": {
+            "type": "number",
+            "errorMessage": {
+                "type": "Account number must be number"
+            }
+        },
+        "password": {
+            "type": "string",
+            "minLength": 6,
+            "format": "strongPassword",
+            "errorMessage": {
+                "minLength": "password should be greater than 6",
+                "format": "password should be including 1 Uppercase, 1 number and 1 special character(#?!@$%^&*-)"
+            }
+        },
+        "deviceId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+        },
+        "ipAddress": {
+            "type": "string",
+            "errorMessage": {
+                "type": "ipAddress's is not valid!"
+            }
+        },
+        "userAgent": {
+            "type": "string",
+            "errorMessage": {
+                "type": "userAgent must be string!"
+            }
+        },
+        "refreshToken": {
+            "type": ["string", "null"],
+            "default": null
+        }
+    },
+
+    "additionalProperties": false,
+    "errorMessage": {
+        "type": "should be an object",
+        "required": {
+            "accountNumber": "accountNumber is required",
+            "password": "password is required"
+        }
+    }
+}

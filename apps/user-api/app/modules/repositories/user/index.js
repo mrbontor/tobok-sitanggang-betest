@@ -66,7 +66,7 @@ module.exports = {
         return await client.collection(COLLECTION_NAME).updateOne(filter, payload);
     },
 
-    getByUserByAccountNumber: async (accountNumber, projection = {}) => {
+    getUserByAccountNumber: async (accountNumber, projection = {}) => {
         const user = await client
             .collection(COLLECTION_NAME)
             .findOne({ accountNumber }, projection);
@@ -76,7 +76,7 @@ module.exports = {
         }
     },
 
-    getByUserByIdentityNumber: async (identityNumber, projection = {}) => {
+    getUserByIdentityNumber: async (identityNumber, projection = {}) => {
         const cache = await CacheRepository.getReponse(identityNumber);
         if (cache) return cache;
 

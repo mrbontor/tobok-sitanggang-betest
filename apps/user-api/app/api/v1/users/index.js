@@ -3,9 +3,9 @@ const App = express();
 
 const { UserController } = require('../../../modules/controllers');
 
-// const { VerifyToken } = require('../../../modules/middleware');
+const { VerifyToken } = require('../../../modules/middleware');
 
-// App.use(VerifyToken.verifyToken);
+App.use(VerifyToken.verifyToken);
 
 App.get('/', UserController.getAllUsers);
 App.get('/table', UserController.getTableUsers);

@@ -24,7 +24,7 @@ module.exports = {
     },
     getUser: async (req, res) => {
         try {
-            const data = await UserService.getUser(parseInt(req.params.identityNumber));
+            const data = await UserService.getUserByIdentityNumber(parseInt(req.params.identityNumber));
             ResponseHelper.success(res, data);
         } catch (err) {
             console.error(`[GET][ONE][USER] >>>>> ${JSON.stringify(err.message)}`);

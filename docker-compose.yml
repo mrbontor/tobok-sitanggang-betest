@@ -3,22 +3,22 @@ version: '3.8'
 services:
     app:
         depends_on:
-            - redis-server
             - mongo-server
+            - redis-server
         build:
             context: .
             dockerfile: apps/user-api/Dockerfile
             target: $NODE_ENV
         container_name: user-api
-        restart: unless-stopped
+        restart: always
         env_file: ./apps/user-api/.env
         volumes:
             - ./apps/user-api:/ap/app/
             - ./apps/user-api/node_modules:/app/app/node_modules
         ports:
-            - $APP_PORT:$APP_PORT
-        # stdin_open: true
-        # tty: true
+            - $APP_DOCKER_PORT:$APP_PORT
+        stdin_open: true
+        tty: true
 
     mongo-server:
         image: mongo:latest
@@ -30,6 +30,8 @@ services:
             - MONGO_INITDB_DATABASE=$MONGO_INITDB_DATABASE
             - MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_USER
             - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_PASSWORD
+            - MONGO_USERNAME=$MONGO_INITDB_USER
+            - MONGO_PASSWORD=$MONGO_INITDB_PASSWORD
         volumes:
             # seeding scripts
             - ./apps/dbs/mongodb/mongo-entrypoint:/docker-entrypoint-initdb.d

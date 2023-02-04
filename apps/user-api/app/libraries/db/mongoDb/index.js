@@ -1,6 +1,6 @@
 const { MongoClient, ObjectId } = require('mongodb');
 
-const env = process.env
+const env = process.env;
 const isLocal = env.MONGO_LOCAL || true;
 
 const config = {
@@ -9,11 +9,11 @@ const config = {
     host: env.MONGO_HOST,
     port: env.MONGO_PORT || 27017,
     database: env.MONGO_DB,
-    interval: env.MONGO_INTERVAL,
+    interval: env.MONGO_INTERVAL
 };
 
-const setUri = isLocal ? 'mongodb' : 'mongodb+srv'
-const extUri = isLocal ? `authSource=admin`: 'retryWrites=true&w=majority'
+const setUri = isLocal ? 'mongodb' : 'mongodb+srv';
+const extUri = isLocal ? `authSource=admin` : 'retryWrites=true&w=majority';
 const mongoUrl = `${setUri}://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}?${extUri}`;
 
 const conOptions = { useNewUrlParser: true };
@@ -43,5 +43,17 @@ module.exports = {
         }
         return false;
     },
-    ObjectId: (id) => new ObjectId(id),
+    ObjectId: (id) => new ObjectId(id)
+    // createIndex: () => {
+    //     client.collection('user').createIndexes(
+    //         [
+    //             { name: 'identityNumber', key: { identityNumber: 1 } },
+    //             { name: 'accountNumber', key: { accountNumber: 1 } },
+    //             { name: 'userName_emailAddress', key: { userName: 1, emailAddress: 1 } }
+    //         ],
+    //         function (err, result) {
+    //             //Error handling code
+    //         }
+    //     );
+    // }
 };
