@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+    app:
+        depends_on:
+            - redis-server
+            - mongo-server
+        build:
+            context: .
+            dockerfile: apps/user-api/Dockerfile
+            target: $NODE_ENV
+        container_name: user-api
+        restart: unless-stopped
+        env_file: ./apps/user-api/.env
+        volumes:
+            - ./apps/user-api:/ap/app/
+            - ./apps/user-api/node_modules:/app/app/node_modules
+        ports:
+            - $APP_PORT:$APP_PORT
+        # stdin_open: true
+        # tty: true
+
+    mongo-server:
+        image: mongo:latest
+        container_name: mongo-dev-server
+        restart: unless-stopped
+        ports:
+            - $MONGO_DOCKER_PORT:$MONGO_INITDB_PORT
+        environment:
+            - MONGO_INITDB_DATABASE=$MONGO_INITDB_DATABASE
+            - MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_USER
+            - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_PASSWORD
+        volumes:
+            # seeding scripts
+            - ./apps/dbs/mongodb/mongo-entrypoint:/docker-entrypoint-initdb.d
+            # named volumes
+            - ./apps/dbs/mongo_data:/data/db
+            # - mongoconfig:/data/configdb
+
+    redis-server:
+        image: redis:6.2-alpine
+        container_name: redis-dev
+        restart: unless-stopped
+        ports:
+            - $REDIS_PORT:$REDIS_PORT
+        command: redis-server --save 20 1 --loglevel warning
+        volumes:
+            - ./apps/dbs/redis_data:/data:rw
+
+networks:
+    default:
+        external: true
+        name: jenius-dev
+
+volumes:
+    mongo_data:
+        external: true
+    redis_data:
+        external: true

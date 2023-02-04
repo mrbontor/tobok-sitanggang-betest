@@ -1,0 +1,32 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+**/node_modules/**
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+
+#dist
+dist/
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# test coverage
+tests
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+#docker
+docker-compose.yml
+
+**.log
+
+.env-example
