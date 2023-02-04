@@ -6,14 +6,14 @@ RUN apk update; apk add tzdata
 # create app directory
 WORKDIR /app
 
-COPY apps/user-api/.env ./
-COPY apps/user-api/package.json apps/user-api/package-lock.json ./
+COPY tobok-sitanggang/user-api/.env ./
+COPY tobok-sitanggang/user-api/package.json tobok-sitanggang/user-api/package-lock.json ./
 # COPY package.json ./
 # COPY package-lock.json ./
 
 RUN npm install
 
-COPY apps/user-api/ ./
+COPY tobok-sitanggang/user-api/ ./
 
 # Environment
 ENV NODE_ENV development

@@ -3,6 +3,6 @@
 **.git/
 .env
 
-apps/dbs/mongo_data
-apps/dbs/redis_data
-apps/apps/user-api/var/log
+tobok-sitanggang/dbs/mongo_data
+tobok-sitanggang/dbs/redis_data
+tobok-sitanggang/user-api/var/log

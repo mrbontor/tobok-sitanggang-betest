@@ -1,25 +1,79 @@
-Task 2
 
-Create microservices (Nodejs - Express) for CRUD operation and store in database (MongoDB) for user data (Point 50)
-User data : Id, userName, accountNumber, emailAddress, identityNumber
-Protect the APIs using the authorization header – JWT (Point 5)
-Validate authorization header (JWT)– (Point 5)
-Choose 1 of 3: (Point 30)
-Implement cache strategy using Redis for user data.
-Consume user data from Kafka and insert to MongoDB (consumer only)
-Produce user data from mongodb to kafka (producer only)
-Deploy into docker/heroku or any platform services and running. (Point 10)
- 
+# tobok-sitanggang-betest
 
-Notes:
+### Requirements
 
-Provide API to generate JWT token
-For read operation please create functions to get user by accountNumber and get user by IdentityNumber.
-Please define the constraint and indexing in database.
-Please use your name with the following format:
-Database name (i.e: db_********_betest)
-Microservices/Project name (i.e: ms-********- betest)
-Redis name (i.e: redis_********_ betest)
-Kafka/topic name (i.e: kafka_********_ betest)
-Git Repo name (i.e: ********- betest.git)
-(change ******** with your name)
+- [Git](https://www.odoo.com/documentation/15.0/contributing/documentation.html#install-git)
+- [Node JS >= 16.15](https://nodejs.org/en/blog/release/v14.17.3/)
+- [MongoDb Driver](https://www.mongodb.com/docs)
+- [MongoDb Server](https://hub.docker.com/_/mongo/).
+- [ExpressJS](https://expressjs.com/en/4x/api.html)
+- [Redis](https://redis.io/docs/)
+- [JWT Token](https://jwt.io/introduction)
+- [Ajv](https://ajv.js.org/guide/getting-started.html)
+- [Docker and Docker Compose](https://docs.docker.com/get-docker/)
+- [Ajv and AJv Plugins](https://ajv.js.org/guide/getting-started.html)
+- [Uuid](https://github.com/uuidjs/uuid)
+- [Docker and Docker Compose](https://docs.docker.com/get-docker/)
+- [Winston]https://www.npmjs.com/package/winston)
+- [Postman](https://learning.postman.com/docs/getting-started/introduction/)
+
+
+### Settings & Configuring
+
+#### App config
+
+
+Please check the file `env.example` and change to `.env`
+there are 2 `.env` files, and both are required.
+- one in root folder to define server needs
+- one in `./apps/user-api` to setup the API
+
+
+```env
+NODE_ENV             = development
+APP_PORT            = 3000
+APP_ISSUER          = gitbub.com/mrbontor
+....
+
+```
+
+#### Database config
+
+This mini microservice is developed using Docker and Docker Compose,
+Hint:
+- If you are going to use your existing MongoDb and Redis, please change the configuration in `./.env` and `./apps/user-api/.env` (i expects the env files has been renamed)
+- If you are using MongoAtlas or other Mongo Cloud, please set variable `MONGO_LOCAL` to true in `./apps/user-api/.env` 
+### Deployment && Testing
+
+#### Deployment && Usage
+
+
+Running service using `Docker` and `Docker-Compose`
+
+```sh
+# start
+$ docker-compose up
+
+# stop
+$ docker-compose down
+
+# remove
+$ docker-compose down -v
+```
+
+Running for existing MongoDB and Redis
+
+```sh
+# enter to the user-api
+$ cd apps/user-api
+
+# install dependencies
+$ npm install
+
+# run app
+$ npm start
+
+# or
+$ node index.js
+```

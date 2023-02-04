@@ -30,5 +30,6 @@ docker-compose.yml
 **.log
 
 .env-example
-apps/dbs/mongo_data
-apps/dbs/redis_data
+
+tobok-sitanggang/dbs/mongo_data
+tobok-sitanggang/dbs/redis_data
