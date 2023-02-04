@@ -15,7 +15,7 @@ module.exports = {
 
     updateInfoUser: async (req, res) => {
         try {
-            const data = await UserService.updateUser(req.params.userId, req.body);
+            const data = await UserService.updateUser(parseInt(req.params.identityNumber), req.body);
             ResponseHelper.success(res, data);
         } catch (err) {
             console.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
@@ -24,7 +24,7 @@ module.exports = {
     },
     getUser: async (req, res) => {
         try {
-            const data = await UserService.getUser(req.params.userId);
+            const data = await UserService.getUser(parseInt(req.params.identityNumber));
             ResponseHelper.success(res, data);
         } catch (err) {
             console.error(`[GET][ONE][USER] >>>>> ${JSON.stringify(err.message)}`);
@@ -53,18 +53,8 @@ module.exports = {
 
     updateCredentialUser: async (req, res) => {
         try {
-            await UserService.updateCredentialUser(req.params.userId, req.body);
+            await UserService.updateCredentialUser(parseInt(req.params.identityNumber), req.body);
             ResponseHelper.noContent(res);
-        } catch (err) {
-            console.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
-            ResponseHelper.error(res, err);
-        }
-    },
-
-    updateLoginStatusUser: async (req, res) => {
-        try {
-            const data = await UserService.updateStatusUser(req.params.userId, req.body);
-            ResponseHelper.success(res, data);
         } catch (err) {
             console.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
@@ -73,7 +63,7 @@ module.exports = {
 
     deleteUser: async (req, res) => {
         try {
-            await UserService.deleteUser(req.params.userId);
+            await UserService.deleteUser(parseInt(req.params.identityNumber));
             ResponseHelper.noContent(res);
         } catch (err) {
             console.error(`[DELETE][USER] >>>>> ${JSON.stringify(err.stack)}`);

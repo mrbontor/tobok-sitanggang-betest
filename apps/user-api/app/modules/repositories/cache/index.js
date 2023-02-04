@@ -14,6 +14,9 @@ module.exports = {
             return JSON.parse(get);
         }        
     },
+    removeResponse: async (key) => {
+        await Redis.del(`${KEY_CACHE}_${key}`);
+    },
 
     save: async (userId, payload) => {
         const add = await Redis.hset(KEY_CACHE, userId, JSON.stringify(payload));

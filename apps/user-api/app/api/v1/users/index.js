@@ -9,11 +9,10 @@ const { UserController } = require('../../../modules/controllers');
 
 App.get('/', UserController.getAllUsers);
 App.get('/table', UserController.getTableUsers);
-App.get('/:userId', UserController.getUser);
+App.get('/:identityNumber', UserController.getUser);
 App.post('/', UserController.createUser);
-App.put('/:userId', UserController.updateInfoUser);
-App.patch('/:userId', UserController.updateCredentialUser);
-App.patch('/status/:userId', UserController.updateLoginStatusUser);
-App.delete('/:userId', UserController.deleteUser);
+App.put('/:identityNumber', UserController.updateInfoUser);
+App.patch('/:identityNumber', UserController.updateCredentialUser);
+App.delete('/:identityNumber', UserController.deleteUser);
 
 module.exports = App;

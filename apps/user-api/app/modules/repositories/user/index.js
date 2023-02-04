@@ -15,38 +15,33 @@ const {
 const COLLECTION_NAME = 'user';
 
 module.exports = {
-    isUsernameOrEmailExist: async (data) => {
-        const user = await client.collection(COLLECTION_NAME).findOne({
-            $or: [{ userName: data.userName }, { email: data.emailAddress }]
+    save: async (data = {}, options = {}) => {
+        const user = await client.collection(COLLECTION_NAME).insertOne(data, options);
+        if (!user.insertedId) {
+            throw new GeneralError('Something went wrong, please try again!');
+        }
+        await CacheRepository.saveReponse(data.identityNumber, {
+            _id: user.insertedId,
+            ...data
         });
 
-        if (user && user.user == data.userName) {
-            throw new UnprocessableEntityError('the user has been taken');
-        }
-        if (user && user.emailAddress == data.emailAddress) {
-            throw new UnprocessableEntityError('the email has been taken');
-        }
+        // const isIndexExist = await client.collection(COLLECTION_NAME).getIndexes()
+        // console.log('isIndexExist', isIndexExist);
+        await client.collection(COLLECTION_NAME).createIndexes([
+            { name: 'userName', key: { 'userName': 1 }, unique: true },
+            { name: 'emailAddress', key: { 'emailAddress': -1 }, unique: true },
+            { name: 'identityNumber', key: { 'identityNumber': 1 }, unique: true },
+            { name: 'accountNumber', key: { 'accountNumber': 1 }, unique: true },
+            // {
+            //     key: { accountNumber: 1, identityNumber: 1 },
+            //     unique: true
+            // }
+        ]);
+        return user.insertedId;
     },
 
-    save: async (data = {}, options = {}) => {
-        try {
-            const user = await client.collection(COLLECTION_NAME).insertOne(data, options);
-            if (!user.insertedId) {
-                throw new GeneralError('Something went wrong, please try again!');
-            }
-            await CacheRepository.saveReponse(user.insertedId, { _id: user.insertedId, ...data });
-            return user.insertedId;
-        } catch (error) {
-            console.log(error.stack);
-        }
-    },
-
-    update: async (userId, payload = {}) => {
-        if (!Mongo.isValidId(userId)) {
-            throw new NotFoundError('User not found!');
-        }
-
-        const clause = { _id: Mongo.ObjectId(userId) };
+    update: async (identityNumber, payload = {}) => {
+        const clause = { identityNumber: identityNumber };
         const data = { $set: payload };
         const options = { upsert: false, returnDocument: 'after' };
         const updateUser = await client
@@ -55,7 +50,7 @@ module.exports = {
         if (!updateUser.value) {
             throw new NotFoundError('User not found!');
         }
-        await CacheRepository.saveReponse(userId, updateUser.value);
+        await CacheRepository.saveReponse(identityNumber, updateUser.value);
         return updateUser.value;
     },
 
@@ -71,17 +66,25 @@ module.exports = {
         return await client.collection(COLLECTION_NAME).updateOne(filter, payload);
     },
 
-    getByUserId: async (userId, projection = {}) => {
-        if (!Mongo.isValidId(userId)) {
-            throw new NotFoundError('User not found!');
+    getByUserByAccountNumber: async (accountNumber, projection = {}) => {
+        const user = await client
+            .collection(COLLECTION_NAME)
+            .findOne({ accountNumber }, projection);
+        if (user) {
+            await CacheRepository.saveReponse(user.identityNumber, user);
+            return user;
         }
+    },
 
-        const cache = await CacheRepository.getReponse(userId);
+    getByUserByIdentityNumber: async (identityNumber, projection = {}) => {
+        const cache = await CacheRepository.getReponse(identityNumber);
         if (cache) return cache;
 
-        return await client
+        const user = await client
             .collection(COLLECTION_NAME)
-            .findOne({ _id: Mongo.ObjectId(userId) }, projection);
+            .findOne({ identityNumber }, projection);
+        await CacheRepository.saveReponse(user.identityNumber, user);
+        return user;
     },
 
     getByUserEmail: async (email, projection = {}) => {
@@ -167,15 +170,10 @@ module.exports = {
         return buildResponsePagination(payload, list);
     },
 
-    delete: async (userId) => {
-        if (!Mongo.isValidId(userId)) {
-            throw new NotFoundError('User not found!');
-        }
-
-        const clause = { _id: Mongo.ObjectId(userId) };
-
+    delete: async (identityNumber) => {
+        await CacheRepository.removeResponse(identityNumber);
         return await client
             .collection(COLLECTION_NAME)
-            .findOneAndDelete(clause, { projection: { _id: 1 } });
+            .findOneAndDelete({ identityNumber }, { projection: { _id: 1 } });
     }
 };

@@ -17,14 +17,14 @@ module.exports = {
         res.send({
             status: true,
             message: message,
-            data,
+            data
         });
     },
     created: (res, data) => {
         res.status(SUCCESS_CREATED).send({
             status: true,
             // message: message,
-            data,
+            data
         });
     },
     noContent: (res) => {
@@ -43,19 +43,19 @@ module.exports = {
             httpOnly: true,
             secure: isSecure,
             sameSite: 'None',
-            maxAge: 24 * 60 * 60 * 1000, //3 * 60 * 1000,
+            maxAge: 24 * 60 * 60 * 1000 //3 * 60 * 1000,
         }); //2 minutes
         res.cookie(COOKIE_DEVICE_ID, data.deviceId, {
             httpOnly: true,
             secure: isSecure,
             sameSite: 'None',
-            maxAge: 1 * 365 * 24 * 60 * 60 * 1000,
+            maxAge: 1 * 365 * 24 * 60 * 60 * 1000
         }); //1 year
 
         res.send({
             status: true,
             message: message,
-            data: { accessToken: data.accessToken },
+            data: { accessToken: data.accessToken }
         });
     },
 
@@ -63,7 +63,7 @@ module.exports = {
         res.clearCookie(COOKIE_REFRESH_TOKEN, {
             httpOnly: true,
             sameSite: 'None',
-            secure: isSecure,
+            secure: isSecure
         });
 
         res.sendStatus(SUCCESS_NO_CONTENT);
@@ -76,12 +76,11 @@ module.exports = {
     customStatusWithMessage: (res, statusCode, message) => {
         res.status(statusCode).send({
             status: false,
-            message: message,
+            message: message
         });
     },
 
     error: (res, error) => {
-        console.log('error', error.message);
         let response = {};
         response.status = error.status;
         response.message = error.message;
@@ -90,9 +89,17 @@ module.exports = {
             response.errors = error.errors;
         }
 
-        if (error instanceof ValidationError && Array.isArray(error.errors)) {
-            response.errors = error.errors;
+        if (error.name === 'MongoServerError') {
+            let detil = ''
+            if (error.message.indexOf('userName') >= 0) detil = 'userName'
+            if (error.message.indexOf('emailAddress') >= 0) detil = 'emailAddress'
+            if (error.message.indexOf('identityNumber') >= 0) detil = 'identityNumber'
+            if (error.message.indexOf('accountNumber') >= 0) detil = 'accountNumber'
+
+            response.status = false
+            response.message = `The ${detil} has been registered!`;
         }
+
         res.status(error.statusCode ? error.statusCode : BAD_REQUEST).send(response);
-    },
+    }
 };

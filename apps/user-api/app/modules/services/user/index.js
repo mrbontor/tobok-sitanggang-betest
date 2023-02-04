@@ -20,8 +20,7 @@ const userData = (payload, other = {}, isUpdate = false) => {
 
 const Services = {
     createUser: async (payload) => {
-        const user = await Validator.validateSchema(payload, UserModel.POST);
-        await UserRepository.isUsernameOrEmailExist(payload);
+        const user = await Validator.validateSchema(payload, UserModel.POST);       
 
         const infoLogin = GenHashPassword(payload.password);
         let dataUser = userData(user, { infoLogin });
@@ -29,16 +28,16 @@ const Services = {
         return await UserRepository.save(dataUser, infoLogin);
     },
 
-    updateUser: async (userId, payload) => {
+    updateUser: async (IdentityNumber, payload) => {
         const user = await Validator.validateSchema(payload, UserModel.PUT);
 
-        await Services.getUser(userId);
-        let dataUser = userData(user, false);
-        return await UserRepository.update(userId, dataUser);
+        const dataUser = userData(user, false);
+        
+        return await UserRepository.update(IdentityNumber, dataUser);
     },
 
-    getUser: async (userId) => {
-        const user = await UserRepository.getByUserId(userId);
+    getUser: async (IdentityNumber) => {
+        const user = await UserRepository.getByUserByIdentityNumber(IdentityNumber);
         if (!user) {
             throw new NotFoundError('User not found!');
         }
@@ -77,11 +76,11 @@ const Services = {
         return await UserRepository.getTableUsers(query, searchAbleFields, projection);
     },
 
-    updateCredentialUser: async (userId, payload) => {
+    updateCredentialUser: async (IdentityNumber, payload) => {
         const userCredential = await Validator.validateSchema(payload, UserModel.PATCH);
 
         const filter = { projection: { infoLogin: 1 } };
-        const getUser = await UserRepository.getByUserId(userId, filter);
+        const getUser = await UserRepository.getByUserByAccountNumber(IdentityNumber, filter);
         const isPasswordValid = VerifyHashPassword(getUser.infoLogin, userCredential.password);
 
         if (!isPasswordValid) {
@@ -90,14 +89,14 @@ const Services = {
 
         const newPassword = await GenHashPassword(userCredential.newPassword);
 
-        const { value } = await UserRepository.update(userId, {
+        const { value } = await UserRepository.update(IdentityNumber, {
             infoLogin: newPassword,
         });
         return value;
     },
 
-    deleteUser: async (userId) => {
-        const { value } = await UserRepository.delete(userId);
+    deleteUser: async (IdentityNumber) => {
+        const { value } = await UserRepository.delete(IdentityNumber);
         if (!value) {
             throw new BadRequestError('User not found');
         }
