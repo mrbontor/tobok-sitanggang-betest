@@ -7,14 +7,14 @@ const config = {
     user: env.MONGO_USER,
     password: env.MONGO_PASSWORD,
     host: env.MONGO_HOST,
-    port: env.MONGO_DOCKER_PORT,
+    port: env.MONGO_PORT || 27017,
     database: env.MONGO_DB,
     interval: env.MONGO_INTERVAL,
 };
 
 const setUri = isLocal ? 'mongodb' : 'mongodb+srv'
-
-const mongoUrl = `${setUri}://${config.user}:${config.password}@${config.host}/${config.database}?retryWrites=true&w=majority`;
+const extUri = isLocal ? `authSource=admin`: 'retryWrites=true&w=majority'
+const mongoUrl = `${setUri}://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}?${extUri}`;
 
 const conOptions = { useNewUrlParser: true };
 
@@ -43,5 +43,5 @@ module.exports = {
         }
         return false;
     },
-    ObjectId,
+    ObjectId: (id) => new ObjectId(id),
 };

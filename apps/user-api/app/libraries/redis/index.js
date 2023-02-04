@@ -36,11 +36,13 @@ class Redis {
     }
 
     async set(key, message) {
-        return await this.client.set(key, message);
+        return await this.client.SET(key, message);
     }
-
+    async setEx(key, expire, message) {
+        return await this.client.SETEX(key, expire, message);
+    }
     async get(key) {
-        return await this.client.get(key);
+        return await this.client.GET(key);
     }
 
     async del(key) {

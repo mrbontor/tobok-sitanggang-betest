@@ -32,11 +32,14 @@
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",
     "ajv-keywords": "^5.1.0",
+    "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "mongodb": "^5.0.0",
     "redis": "^4.6.4",
+    "string-math": "^1.2.2",
     "uuid": "^9.0.0",
     "winston": "^3.8.2"
   }

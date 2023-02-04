@@ -1,0 +1,57 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["userName", "accountNumber", "emailAddress", "identityNumber", "password"],
+    "properties": {
+        "userName": {
+            "type": "string",
+            "minLength": 4,
+            "errorMessage": {
+                "minLength": "Username should be greater than 4",
+                "type": "Username must be string"
+            }
+        },
+        "accountNumber": {
+            "type": "number",
+            "errorMessage": {
+                "type": "Account number must be number"
+            }
+        },
+        "emailAddress": {
+            "type": "string",
+            "format": "email",
+            "minLength": 4,
+            "errorMessage": {
+                "format": "The format email address doesn't look like an email",
+                "minLength": "Email address should be greater than 4"
+            }
+        },
+        "identityNumber": {
+            "type": "number",
+            "errorMessage": {
+                "type": "Identity number must be number"
+            }
+        },
+        "password": {
+            "type": "string",
+            "minLength": 6,
+            "format": "strongPassword",
+            "errorMessage": {
+                "minLength": "Password should be greater than 6",
+                "format": "Password should be including 1 Uppercase, 1 number and 1 special character(#?!@$%^&*-)",
+                "type": "Password must be string"
+            }
+        }        
+    },
+    "additionalProperties": false,
+    "errorMessage": {
+        "type": "should be an object",
+        "required": {
+            "userName": "Username is required!",
+            "accountNumber": "Account number is required!",
+            "emailAddress": "Email address is required!",
+            "identityNumber": "Identity number is required!",
+            "password": "Password is required!"
+        }
+    }
+}
