@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "start": "node index.js",
-    "start:dev": "nodemon -w index.js"
+    "start:dev": "nodemon -w index.js",
+    "prettier": "npx prettier app --check",
+    "prettier:fix": "npm run prettier -- \"app/**/*\" --write"
   },
   "repository": {
     "type": "git",
@@ -42,5 +44,11 @@
     "string-math": "^1.2.2",
     "uuid": "^9.0.0",
     "winston": "^3.8.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.3"
   }
 }

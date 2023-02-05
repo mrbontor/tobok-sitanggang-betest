@@ -41,7 +41,7 @@
                 "format": "Password should be including 1 Uppercase, 1 number and 1 special character(#?!@$%^&*-)",
                 "type": "Password must be string"
             }
-        }        
+        }
     },
     "additionalProperties": false,
     "errorMessage": {

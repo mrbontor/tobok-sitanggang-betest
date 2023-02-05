@@ -68,5 +68,5 @@ const dateDiff = (startDate, endDate, label = 'day') => {
 module.exports = {
     DateDiff: dateDiff,
     CreateDate: createDate,
-    IsDateInPast: isDateInPast,
+    IsDateInPast: isDateInPast
 };

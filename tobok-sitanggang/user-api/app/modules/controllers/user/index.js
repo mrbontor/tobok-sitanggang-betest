@@ -1,6 +1,6 @@
 const { UserService } = require('../../services');
 const ResponseHelper = require('../../../helpers/response');
-
+const Logging = require('../../../helpers/logging');
 module.exports = {
     createUser: async (req, res) => {
         try {
@@ -8,7 +8,7 @@ module.exports = {
 
             ResponseHelper.success(res, data);
         } catch (err) {
-            console.error(`[CREATE][USER] >>>>> ${JSON.stringify(err.message)}`);
+            Logging.error(`[CREATE][USER] >>>>> ${JSON.stringify(err.message)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -18,7 +18,7 @@ module.exports = {
             const data = await UserService.updateUser(parseInt(req.params.identityNumber), req.body);
             ResponseHelper.success(res, data);
         } catch (err) {
-            console.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -27,7 +27,7 @@ module.exports = {
             const data = await UserService.getUserByIdentityNumber(parseInt(req.params.identityNumber));
             ResponseHelper.success(res, data);
         } catch (err) {
-            console.error(`[GET][ONE][USER] >>>>> ${JSON.stringify(err.message)}`);
+            Logging.error(`[GET][ONE][USER] >>>>> ${JSON.stringify(err.message)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -36,7 +36,7 @@ module.exports = {
             const data = await UserService.getAllUsers(req.query);
             ResponseHelper.success(res, data);
         } catch (err) {
-            console.error(`[GET][ALL][USERS] >>>>> ${JSON.stringify(err.message)}`);
+            Logging.error(`[GET][ALL][USERS] >>>>> ${JSON.stringify(err.message)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -46,7 +46,7 @@ module.exports = {
             const data = await UserService.getTableUsers(req.query);
             ResponseHelper.success(res, data);
         } catch (err) {
-            console.error(`[GET][TABLE][USERS] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[GET][TABLE][USERS] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -56,7 +56,7 @@ module.exports = {
             await UserService.updateCredentialUser(parseInt(req.params.identityNumber), req.body);
             ResponseHelper.noContent(res);
         } catch (err) {
-            console.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[UPDATE][USER] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -66,8 +66,8 @@ module.exports = {
             await UserService.deleteUser(parseInt(req.params.identityNumber));
             ResponseHelper.noContent(res);
         } catch (err) {
-            console.error(`[DELETE][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[DELETE][USER] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
         }
-    },
+    }
 };

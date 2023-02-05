@@ -23,12 +23,12 @@ class Logging {
                 //
                 new winston.transports.File({
                     filename: args.path + args.filename + '-errors.log', //args.errorSufix + '.log',
-                    level: 'error',
+                    level: 'error'
                 }),
                 new winston.transports.File({
-                    filename: args.path + args.filename + '.log',
-                }),
-            ],
+                    filename: args.path + args.filename + '.log'
+                })
+            ]
         });
 
         // Call exceptions.handle with a transport to handle exceptions
@@ -44,8 +44,8 @@ class Logging {
                 // - Write to all logs with level `info` and below to `combined.log`
                 // - Write all logs error (and below) to `error.log`.
                 //
-                new winston.transports.Console(),
-            ],
+                new winston.transports.Console()
+            ]
         });
     }
 

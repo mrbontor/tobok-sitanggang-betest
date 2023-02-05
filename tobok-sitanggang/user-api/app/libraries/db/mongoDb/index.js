@@ -26,7 +26,6 @@ module.exports = {
             const connection = await client.connect();
             client = connection.db(config.database);
 
-            console.info('[MONGODB] successfully connected!!!');
             return client;
         } finally {
             // Ensures that the client will close when you finish/error
@@ -43,17 +42,8 @@ module.exports = {
         }
         return false;
     },
-    ObjectId: (id) => new ObjectId(id)
-    // createIndex: () => {
-    //     client.collection('user').createIndexes(
-    //         [
-    //             { name: 'identityNumber', key: { identityNumber: 1 } },
-    //             { name: 'accountNumber', key: { accountNumber: 1 } },
-    //             { name: 'userName_emailAddress', key: { userName: 1, emailAddress: 1 } }
-    //         ],
-    //         function (err, result) {
-    //             //Error handling code
-    //         }
-    //     );
-    // }
+    ObjectId: (id) => new ObjectId(id),
+    ping: async () => {
+        await client.db('admin').command({ ping: 1 });
+    }
 };

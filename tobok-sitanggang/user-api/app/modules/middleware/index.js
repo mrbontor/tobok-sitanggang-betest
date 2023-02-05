@@ -3,5 +3,5 @@ const VerifyToken = require('./isAuthenticated');
 
 module.exports = {
     ErrorHandler,
-    VerifyToken,
+    VerifyToken
 };

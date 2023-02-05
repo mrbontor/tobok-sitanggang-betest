@@ -2,9 +2,9 @@ const Ajv = require('ajv');
 const { ValidationError } = require('./exceptions');
 
 /**
- * 
- * @param {Array} validationErrors 
- * @returns 
+ *
+ * @param {Array} validationErrors
+ * @returns
  */
 const parseErrors = (validationErrors) => {
     return validationErrors.map((err) => {
@@ -28,7 +28,7 @@ const parseErrors = (validationErrors) => {
         return {
             param: param,
             key: keyword,
-            message: err.message,
+            message: err.message
         };
     });
 };
@@ -38,7 +38,7 @@ const ajvInit = new Ajv.default({
     // jsonPointers: true,
     async: true,
     // loopRequired: 'Infinity', //200 default
-    useDefaults: true,
+    useDefaults: true
 });
 
 const AjvFormats = require('ajv-formats');
@@ -53,7 +53,7 @@ const ajvPlugin = () => {
     ajvInit.addFormat('ObjectId', /^[0-9a-fA-F]{24}$/);
     ajvInit.addFormat(
         'dateLongIndo',
-        /^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9]) (2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?$/,
+        /^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9]) (2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?$/
     );
     ajvInit.addFormat('dateShortIndo', /^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])/);
     ajvInit.addFormat('24-hours-time', /^(?:2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]$/);
@@ -74,5 +74,5 @@ module.exports = {
         }
 
         return Promise.resolve(request);
-    },
+    }
 };

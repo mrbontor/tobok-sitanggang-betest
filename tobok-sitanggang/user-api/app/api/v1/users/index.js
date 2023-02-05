@@ -12,7 +12,7 @@ App.get('/table', UserController.getTableUsers);
 App.get('/:identityNumber', UserController.getUser);
 App.post('/', UserController.createUser);
 App.put('/:identityNumber', UserController.updateInfoUser);
-App.patch('/:identityNumber', UserController.updateCredentialUser);
+App.patch('/password/:identityNumber', UserController.updateCredentialUser);
 App.delete('/:identityNumber', UserController.deleteUser);
 
 module.exports = App;

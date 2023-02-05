@@ -1,26 +1,37 @@
 const Express = require('express');
 const App = Express();
+
 // Initialize config file
 require('dotenv').config();
-
-const Logging = require('./helpers/logging');
 process.env.TZ = 'Asia/Jakarta';
 
+const ENV = process.env;
+
+const Logging = require('./helpers/logging');
 // Initialize logging
 Logging.init({
-    path: process.env.LOG_PATH,
-    level: process.env.LOG_LEVEL,
-    type: process.env.LOG_TYPE, //Logging or write to file
-    filename: process.env.LOG_FILENAME
+    path: ENV.LOG_PATH,
+    level: ENV.LOG_LEVEL,
+    type: ENV.LOG_TYPE, //Logging or write to file
+    filename: ENV.LOG_FILENAME
 });
 
 const DbCon = require('./libraries/db/mongoDb');
 DbCon.connect();
+const MongoHealth = async () => {
+    try {
+        await DbCon.ping();
+        Logging.info('[MONGODB] Connection established');
+    } catch (err) {
+        Logging.error('[MONGODB] connection failed...' + err);
+    }
+};
+MongoHealth();
 
 //Initialize redis connection
 const confRedis = {
-    url: `redis://${process.env.REDIS_HOSTNAME}:${process.env.REDIS_PORT}/`,
-    checkpoint: 'redis-key',    
+    url: `redis://${ENV.REDIS_HOSTNAME}:${ENV.REDIS_PORT}/`,
+    checkpoint: 'redis-key'
 };
 
 const Redis = require('./libraries/redis');
@@ -28,7 +39,7 @@ Redis.init(confRedis);
 // Redis.auth(process.env.REDIS_PASSWORD);
 Redis.connect();
 
-const redisHealth = async () => {
+const RedisHealth = async () => {
     try {
         const redisHealth = await Redis.ping();
         if ('PONG' === redisHealth) Logging.info('[REDIS] Connection established');
@@ -36,7 +47,7 @@ const redisHealth = async () => {
         Logging.error('[REDIS] connection failed...' + err);
     }
 };
-redisHealth();
+RedisHealth();
 
 //API check healt
 App.get('/', (req, res, next) => {

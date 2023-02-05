@@ -3,14 +3,14 @@ const App = new Router();
 
 const BodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-
+const Logging = require('../helpers/logging');
 // setup CORS
 const allowCrossDomain = (req, res, next) => {
     res.header('Access-Control-Allow-Credentials', true);
     res.header('Access-Control-Allow-Origin', '*');
     res.header(
         'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-access-token, Authorization, tdid',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-access-token, Authorization, DID'
     );
     res.header('Access-Control-Allow-Methods', 'POST, GET,PUT, OPTIONS, DELETE, PATCH');
     // next()
@@ -30,22 +30,20 @@ App.use(BodyParser.urlencoded({ extended: false }));
 
 // Handle server error
 App.use((err, req, res, next) => {
-    console.debug(`[REQ] ${req.body}`);
-
     let response = {
         status: false,
-        message: err.message,
+        message: err.message
     };
     try {
         JSON.parse(req.body);
     } catch (e) {
-        console.error('[MIDDLEWAREERROR] ' + err.message);
+        Logging.error('[MIDDLEWARE][ERROR] ' + err.message);
         response.message = e.message;
         res.status(400).send(response);
     }
 
     if (err) {
-        console.error('[MIDDLEWAREERROR] ' + err.message);
+        Logging.error('[MIDDLEWARE][ERROR] ' + err.message);
         res.status(500).send(response);
     }
 
@@ -63,6 +61,6 @@ App.use((req, res, next) => {
 });
 
 const { ErrorHandler } = require('../modules/middleware');
-App.use(ErrorHandler.errorHandler);
+App.use(ErrorHandler);
 
 module.exports = App;

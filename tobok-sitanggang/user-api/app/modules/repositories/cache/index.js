@@ -12,7 +12,7 @@ module.exports = {
         const get = await Redis.get(`${KEY_CACHE}_${key}`);
         if (get) {
             return JSON.parse(get);
-        }        
+        }
     },
     removeResponse: async (key) => {
         await Redis.del(`${KEY_CACHE}_${key}`);

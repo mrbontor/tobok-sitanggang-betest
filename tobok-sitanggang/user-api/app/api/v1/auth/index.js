@@ -4,6 +4,7 @@ const App = new Router();
 const { AuthController } = require('../../../modules/controllers');
 
 App.post('/login', AuthController.signIn);
+App.post('/register', AuthController.signUp);
 
 const { VerifyToken } = require('../../../modules/middleware');
 App.use(VerifyToken.verifyToken);

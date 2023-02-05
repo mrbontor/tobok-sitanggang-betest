@@ -3,5 +3,5 @@ const AuthModel = require('./auth');
 
 module.exports = {
     UserModel,
-    AuthModel,
+    AuthModel
 };

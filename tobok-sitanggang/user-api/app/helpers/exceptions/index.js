@@ -17,5 +17,5 @@ module.exports = {
     ServerError,
     NotAuthorizedError,
     ForbiddenError,
-    GeneralError,
+    GeneralError
 };

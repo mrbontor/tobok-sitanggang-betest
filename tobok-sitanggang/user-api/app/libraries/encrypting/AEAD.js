@@ -14,19 +14,19 @@ const MAX_NUMBER = 10000;
 const MIN_NUMBER = 1000;
 
 /**
- * 
- * @param {Number} max 
- * @param {Number} min 
- * @returns 
+ *
+ * @param {Number} max
+ * @param {Number} min
+ * @returns
  */
 const genNumberCode = (max, min) => {
     return Math.floor(Math.random() * (max - 1 + 1) + min);
 };
 
 /**
- * 
- * @param {String} password 
- * @returns 
+ *
+ * @param {String} password
+ * @returns
  */
 const genHashPassword = (password) => {
     const salt = Crypto.randomBytes(RANDOM_BYTE).toString('base64');
@@ -37,15 +37,15 @@ const genHashPassword = (password) => {
     return {
         hash: hash,
         salt: salt,
-        iterations: iterations,
+        iterations: iterations
     };
 };
 
 /**
- * 
- * @param {Object} infoLogin 
- * @param {String} password 
- * @returns 
+ *
+ * @param {Object} infoLogin
+ * @param {String} password
+ * @returns
  */
 const verifyHashPassword = (infoLogin, password) => {
     const hashed = Crypto.pbkdf2Sync(password, infoLogin.salt, infoLogin.iterations, 64, ALGORITM).toString(`hex`);
@@ -54,9 +54,9 @@ const verifyHashPassword = (infoLogin, password) => {
 };
 
 /**
- * 
- * @param {String} text 
- * @returns 
+ *
+ * @param {String} text
+ * @returns
  */
 const encrypt = (text) => {
     let string = null;
@@ -77,16 +77,16 @@ const encrypt = (text) => {
     const cipherText = JSON.stringify({
         iv: iv.toString('base64'),
         encryptedData: encrypted.toString('base64'),
-        auth: auth,
+        auth: auth
     });
 
     return Buffer.from(cipherText).toString('base64');
 };
 
 /**
- * 
- * @param {String} text 
- * @returns 
+ *
+ * @param {String} text
+ * @returns
  */
 const decrypt = (text) => {
     const chiperText = JSON.parse(Buffer.from(text, 'base64'));
@@ -112,5 +112,5 @@ module.exports = {
     VerifyHashPassword: verifyHashPassword,
 
     Encrypt: encrypt,
-    Decrypt: decrypt,
+    Decrypt: decrypt
 };

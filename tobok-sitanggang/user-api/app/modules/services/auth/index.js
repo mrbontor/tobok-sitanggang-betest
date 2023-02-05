@@ -132,9 +132,7 @@ module.exports = {
 
             const decryptedPayload = JSON.parse(Decrypt(isTokenValid.data));
 
-            const user = await UserRepository.getUserByAccountNumber(
-                decryptedPayload.accountNumber
-            );
+            const user = await UserRepository.getUserByAccountNumber(decryptedPayload.accountNumber);
             if (!user) {
                 throw new ForbiddenError();
             }
@@ -247,10 +245,7 @@ module.exports = {
             };
         }
 
-        await UserRepository.updateCustom(
-            { accountNumber: decryptedPayload.accountNumber },
-            removeToken
-        );
+        await UserRepository.updateCustom({ accountNumber: decryptedPayload.accountNumber }, removeToken);
 
         return true;
     }

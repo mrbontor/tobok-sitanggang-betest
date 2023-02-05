@@ -1,10 +1,7 @@
 const Mongo = require('../../../libraries/db/mongoDb');
 const client = Mongo.getDb().db();
 const CacheRepository = require('../cache');
-const {
-    buildQueryMongoPagination,
-    buildResponsePagination
-} = require('../../../helpers/mongoDbPagination');
+const { buildQueryMongoPagination, buildResponsePagination } = require('../../../helpers/mongoDbPagination');
 const {
     UnprocessableEntityError,
     GeneralError,
@@ -25,13 +22,11 @@ module.exports = {
             ...data
         });
 
-        // const isIndexExist = await client.collection(COLLECTION_NAME).getIndexes()
-        // console.log('isIndexExist', isIndexExist);
         await client.collection(COLLECTION_NAME).createIndexes([
-            { name: 'userName', key: { 'userName': 1 }, unique: true },
-            { name: 'emailAddress', key: { 'emailAddress': -1 }, unique: true },
-            { name: 'identityNumber', key: { 'identityNumber': 1 }, unique: true },
-            { name: 'accountNumber', key: { 'accountNumber': 1 }, unique: true },
+            { name: 'userName', key: { userName: 1 }, unique: true },
+            { name: 'emailAddress', key: { emailAddress: -1 }, unique: true },
+            { name: 'identityNumber', key: { identityNumber: 1 }, unique: true },
+            { name: 'accountNumber', key: { accountNumber: 1 }, unique: true }
             // {
             //     key: { accountNumber: 1, identityNumber: 1 },
             //     unique: true
@@ -44,46 +39,42 @@ module.exports = {
         const clause = { identityNumber: identityNumber };
         const data = { $set: payload };
         const options = { upsert: false, returnDocument: 'after' };
-        const updateUser = await client
-            .collection(COLLECTION_NAME)
-            .findOneAndUpdate(clause, data, options);
-        if (!updateUser.value) {
-            throw new NotFoundError('User not found!');
-        }
+        const updateUser = await client.collection(COLLECTION_NAME).findOneAndUpdate(clause, data, options);
+        if (!updateUser.value) throw new NotFoundError('User not found!');
         await CacheRepository.saveReponse(identityNumber, updateUser.value);
         return updateUser.value;
     },
 
     updateCustom: async (filter, payload = {}) => {
-        if (typeof filter.userId !== 'undefined' && !Mongo.isValidId(filter.userId)) {
-            throw new NotFoundError('User not found!');
-        }
-
-        const cache = await CacheRepository.getReponse(filter.userId);
+        const cache = await CacheRepository.getReponse(filter.identityNumber);
 
         if (cache) return cache;
 
-        return await client.collection(COLLECTION_NAME).updateOne(filter, payload);
+        let update = await client.collection(COLLECTION_NAME).updateOne(filter, payload);
+        return update;
     },
 
     getUserByAccountNumber: async (accountNumber, projection = {}) => {
-        const user = await client
-            .collection(COLLECTION_NAME)
-            .findOne({ accountNumber }, projection);
-        if (user) {
-            await CacheRepository.saveReponse(user.identityNumber, user);
-            return user;
-        }
+        const user = await client.collection(COLLECTION_NAME).findOne({ accountNumber }, projection);
+
+        if (!user) throw new NotFoundError('User not found!');
+
+        await CacheRepository.saveReponse(user.identityNumber, user);
+        return user;
     },
 
     getUserByIdentityNumber: async (identityNumber, projection = {}) => {
         const cache = await CacheRepository.getReponse(identityNumber);
         if (cache) return cache;
 
-        const user = await client
-            .collection(COLLECTION_NAME)
-            .findOne({ identityNumber }, projection);
+        const user = await client.collection(COLLECTION_NAME).findOne({ identityNumber }, projection);
+        if (!user) throw new NotFoundError('User not found!');
         await CacheRepository.saveReponse(user.identityNumber, user);
+        return user;
+    },
+    getUserCredential: async (identityNumber, projection = {}) => {
+        const user = await client.collection(COLLECTION_NAME).findOne({ identityNumber }, projection);
+        if (!user) throw new NotFoundError('User not found!');
         return user;
     },
 
@@ -96,23 +87,10 @@ module.exports = {
     },
 
     getAllUsers: async (payload = {}, projection = null) => {
-        const { search, status, userId } = payload || null;
+        const { search, accountNumber, identityNumber } = payload || null;
 
         let query = {};
         let options = [{ $sort: { userName: 1 } }];
-
-        if (status) {
-            if (typeof status == 'object') {
-                query.isActive = { $in: status };
-            } else {
-                const statuses = status.toString().replace(/\s/g, '').split(',');
-
-                if (statuses.length > 0) {
-                    let stats = statuses.map((status) => JSON.parse(status));
-                    query.isActive = { $in: stats };
-                }
-            }
-        }
 
         if (search) {
             query.$or = [
@@ -123,20 +101,19 @@ module.exports = {
             options.push({ $limit: 10 });
         }
 
-        let userIds = [];
-        if (userId) {
-            userIds = userId.replace(/\s/g, '').split(',');
+        let accountNumbers = [];
+        if (accountNumber) {
+            accountNumbers = accountNumber.replace(/\s/g, '').split(',');
 
-            if (userIds.length > 0) {
-                let ids = [];
-                userIds.forEach((id) => {
-                    if (Mongo.isValidId(id)) {
-                        ids.push(Mongo.ObjectId(id));
-                    }
-                });
+            const ans = accountNumbers.map((el) => parseInt(el));
+            query.accountNumber = { $in: ans };
+        }
+        let identityNumbers = [];
+        if (identityNumber) {
+            identityNumbers = identityNumber.replace(/\s/g, '').split(',');
 
-                query._id = { $in: ids };
-            }
+            const ins = identityNumbers.map((el) => parseInt(el));
+            query.identityNumber = { $in: ins };
         }
 
         if (projection) {
@@ -144,7 +121,11 @@ module.exports = {
         }
         const queryUser = [{ $match: query }, ...options];
 
-        return (await client.collection(COLLECTION_NAME).aggregate(queryUser).toArray()) || [];
+        const users = (await client.collection(COLLECTION_NAME).aggregate(queryUser).toArray()) || [];
+        if (users.length > 0) {
+            await CacheRepository.saveReponse('users', users);
+        }
+        return users;
     },
 
     getTableUsers: async (payload = {}, fieldSearch = [], projection = null) => {

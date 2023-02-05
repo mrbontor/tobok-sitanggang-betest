@@ -83,7 +83,6 @@ const handleFieldStatus = (payload) => {
                 const statuses = payload[field].toString().replace(/\s/g, '').split(',');
 
                 if (statuses.length > 0) {
-                    console.log('statuses', statuses);
                     const stats = statuses.map((status) => JSON.parse(JSON.stringify(status)));
                     query[field] = { $in: stats };
                 }
@@ -126,7 +125,7 @@ module.exports = {
             { $match: query },
             { $sort: sortBy },
             { $skip: (pageNumber - 1) * pageSize },
-            { $limit: pageSize },
+            { $limit: pageSize }
         ];
         if (aggregate.length > 0) {
             finalQuery.splice(1, 0, ...aggregate);
@@ -154,7 +153,7 @@ module.exports = {
             size: pageSize,
             totalRecord: results[0].data.length > 0 ? results[0].count[0].totalRecord : 0,
             totalPage: results[0].count.length > 0 ? Math.ceil(results[0].count[0].totalRecord / pageSize) : 0,
-            data: results[0].data,
+            data: results[0].data
         };
-    },
+    }
 };

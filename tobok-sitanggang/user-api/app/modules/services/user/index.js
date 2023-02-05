@@ -2,11 +2,7 @@ const Validator = require('../../../helpers/validateSchema');
 const { UserModel } = require('../../models');
 const { UserRepository, CacheRepository } = require('../../repositories');
 const { GenHashPassword, VerifyHashPassword } = require('../../../libraries/encrypting/AEAD');
-const {
-    UnprocessableEntityError,
-    BadRequestError,
-    NotFoundError
-} = require('../../../helpers/exceptions');
+const { UnprocessableEntityError, BadRequestError, NotFoundError } = require('../../../helpers/exceptions');
 
 const userData = (payload, other = {}, isUpdate = false) => {
     const now = new Date();
@@ -40,19 +36,13 @@ const Services = {
         return await UserRepository.update(IdentityNumber, dataUser);
     },
 
-    getUserByIdentityNumber: async (IdentityNumber) => {
-        const user = await UserRepository.getUserByIdentityNumber(IdentityNumber);
-        if (!user) {
-            throw new NotFoundError('User not found!');
-        }
+    getUserByIdentityNumber: async (IdentityNumber, options) => {
+        const user = await UserRepository.getUserByIdentityNumber(IdentityNumber, options);
         return user;
     },
 
     getUserByAccountNumber: async (accountNumber, options) => {
         const user = await UserRepository.getUserByAccountNumber(accountNumber, options);
-        if (!user) {
-            throw new NotFoundError('User not found!');
-        }
         return user;
     },
 
@@ -84,18 +74,14 @@ const Services = {
         const userCredential = await Validator.validateSchema(payload, UserModel.PATCH);
 
         const filter = { projection: { infoLogin: 1 } };
-        const getUser = await UserRepository.getUserByAccountNumber(IdentityNumber, filter);
+        const getUser = await UserRepository.getUserCredential(IdentityNumber, filter);
         const isPasswordValid = VerifyHashPassword(getUser.infoLogin, userCredential.password);
 
-        if (!isPasswordValid) {
-            throw new BadRequestError('Incorect Password');
-        }
+        if (!isPasswordValid) throw new BadRequestError('Incorect Password');
 
         const newPassword = await GenHashPassword(userCredential.newPassword);
 
-        const { value } = await UserRepository.update(IdentityNumber, {
-            infoLogin: newPassword
-        });
+        const { value } = await UserRepository.update(IdentityNumber, { infoLogin: newPassword, token: [] });
         return value;
     },
 

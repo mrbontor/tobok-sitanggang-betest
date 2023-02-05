@@ -1,16 +1,24 @@
+const StringMath = require('string-math');
+const Logging = require('../logging');
+const { ValidationError, GeneralError } = require('../exceptions');
+
+const ENV = process.env;
+
+const TOKEN_EXPIRY = StringMath(ENV.APP_TOKEN_EXPIRED) || '1m';
+const REFRESH_TOKEN_EXPIRY = StringMath(ENV.APP_REFRESH_TOKEN_EXPIRED) || '1m';
+const DEVICE_ID_EXPIRY = StringMath(ENV.APP_DEVICE_ID_EXPIRED) || '1m';
+
 const SUCCESS_CREATED = 201;
 const SUCCESS_NO_CONTENT = 204;
 const BAD_REQUEST = 400;
+const UNPROCESSABLE_ENTITY = 422;
 const UNAUTHORIZED = 401;
 const ACCESS_FORBIDDEN = 403;
-const NOT_FOUND = 404;
-const UNPROCESSABLE_ENTITY = 422;
-const SERVER_ERROR = 500;
 
 const COOKIE_REFRESH_TOKEN = 'RTOKEN';
 const COOKIE_DEVICE_ID = 'DID';
-const { ValidationError } = require('../exceptions');
-const isSecure = process.env.ENV == 'development';
+
+const isSecure = ENV.NODE_ENV == 'development';
 
 module.exports = {
     success: (res, data, message = 'Success') => {
@@ -43,14 +51,14 @@ module.exports = {
             httpOnly: true,
             secure: isSecure,
             sameSite: 'None',
-            maxAge: 24 * 60 * 60 * 1000 //3 * 60 * 1000,
-        }); //2 minutes
+            maxAge: REFRESH_TOKEN_EXPIRY
+        });
         res.cookie(COOKIE_DEVICE_ID, data.deviceId, {
             httpOnly: true,
             secure: isSecure,
             sameSite: 'None',
-            maxAge: 1 * 365 * 24 * 60 * 60 * 1000
-        }); //1 year
+            maxAge: DEVICE_ID_EXPIRY
+        });
 
         res.send({
             status: true,
@@ -81,8 +89,11 @@ module.exports = {
     },
 
     error: (res, error) => {
+        if (isSecure) {
+            Logging.log(JSON.stringify(err.stack));
+        }
         let response = {};
-        response.status = error.status;
+        response.status = error.status || false;
         response.message = error.message;
 
         if (error instanceof ValidationError && Array.isArray(error.errors)) {
@@ -90,14 +101,25 @@ module.exports = {
         }
 
         if (error.name === 'MongoServerError') {
-            let detil = ''
-            if (error.message.indexOf('userName') >= 0) detil = 'userName'
-            if (error.message.indexOf('emailAddress') >= 0) detil = 'emailAddress'
-            if (error.message.indexOf('identityNumber') >= 0) detil = 'identityNumber'
-            if (error.message.indexOf('accountNumber') >= 0) detil = 'accountNumber'
+            let detilErr = 'Something went wrong!';
+            if (error.message.indexOf('userName') >= 0) detilErr = 'The userName has been registered!';
+            if (error.message.indexOf('emailAddress') >= 0) detilErr = 'The emailAddress has been registered!';
+            if (error.message.indexOf('identityNumber') >= 0) detilErr = 'The identityNumber has been registered!';
+            if (error.message.indexOf('accountNumber') >= 0) detilErr = 'The accountNumber has been registered!';
 
-            response.status = false
-            response.message = `The ${detil} has been registered!`;
+            error.statusCode = UNPROCESSABLE_ENTITY;
+            response.message = detilErr;
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            error.statusCode = UNAUTHORIZED;
+            response.message = 'Token Invalid';
+
+            res.clearCookie(COOKIE_REFRESH_TOKEN, {
+                httpOnly: true,
+                sameSite: 'None',
+                secure: isSecure
+            });
         }
 
         res.status(error.statusCode ? error.statusCode : BAD_REQUEST).send(response);

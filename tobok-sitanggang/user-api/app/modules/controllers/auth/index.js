@@ -1,12 +1,13 @@
-const { AuthService } = require('../../services');
+const { AuthService, UserService } = require('../../services');
 const ResponseHelper = require('../../../helpers/response');
 const { v4: Uuidv4, validate: ValidadtePayload } = require('uuid');
-
+const Logging = require('../../../helpers/logging');
 const isSecure = process.env.ENV == 'development';
 const COOKIE_REFRESH_TOKEN = 'RTOKEN';
+
 const setPayload = (req, other = {}) => {
     const cookies = req.cookies;
-    // console.log("cookie", ValidadtePayload(cookies.DID));
+    // Logging.log("cookie", ValidadtePayload(cookies.DID));
 
     const deviceUniqueId = cookies.DID && ValidadtePayload(cookies.DID) ? cookies.DID : Uuidv4();
 
@@ -16,7 +17,7 @@ const setPayload = (req, other = {}) => {
         deviceId: deviceUniqueId,
         refreshToken: cookies.RTOKEN || null,
         ...req.body,
-        ...other,
+        ...other
     };
 };
 
@@ -38,13 +39,24 @@ module.exports = {
                 res.clearCookie(COOKIE_REFRESH_TOKEN, {
                     httpOnly: true,
                     sameSite: 'None',
-                    secure: isSecure,
+                    secure: isSecure
                 });
             }
 
             ResponseHelper.successLogIn(res, data);
         } catch (err) {
-            console.error(`[LOGIN][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[LOGIN][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            ResponseHelper.error(res, err);
+        }
+    },
+
+    signUp: async (req, res) => {
+        try {
+            const data = await UserService.createUser(req.body);
+
+            ResponseHelper.success(res, data);
+        } catch (err) {
+            Logging.error(`[REGISTER][USER] >>>>> ${JSON.stringify(err.message)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -57,7 +69,7 @@ module.exports = {
 
             ResponseHelper.successLogIn(res, data);
         } catch (err) {
-            console.error(`[REFRESH][TOKEN][USER] >>>>> ${JSON.stringify(err.stack)}`);
+            Logging.error(`[REFRESH][TOKEN][USER] >>>>> ${JSON.stringify(err.stack)}`);
             ResponseHelper.error(res, err);
         }
     },
@@ -65,7 +77,7 @@ module.exports = {
     signOut: async (req, res) => {
         try {
             const payload = setPayload(req, {
-                allDevices: Boolean(req.query.allDevices),
+                allDevices: Boolean(req.query.allDevices)
             });
 
             if (!payload.refreshToken) {
@@ -75,8 +87,8 @@ module.exports = {
 
             ResponseHelper.successLogOut(res);
         } catch (err) {
-            console.error(`[LOGOUT][USER] >>>>> ${JSON.stringify(err.message)}`);
+            Logging.error(`[LOGOUT][USER] >>>>> ${JSON.stringify(err.message)}`);
             ResponseHelper.error(res, err);
         }
-    },
+    }
 };

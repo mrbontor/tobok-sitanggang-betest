@@ -3,5 +3,5 @@ const AuthController = require('./auth');
 
 module.exports = {
     UserController,
-    AuthController,
+    AuthController
 };

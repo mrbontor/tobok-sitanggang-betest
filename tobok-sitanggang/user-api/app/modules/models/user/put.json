@@ -31,7 +31,7 @@
             "errorMessage": {
                 "type": "Identity number must be number"
             }
-        }    
+        }
     },
     "additionalProperties": false,
     "errorMessage": {

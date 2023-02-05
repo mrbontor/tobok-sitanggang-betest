@@ -4,8 +4,7 @@ const StringMath = require('string-math');
 const ENV = process.env;
 const TOKEN_SECRET = ENV.APP_TOKEN_SECRET;
 const TOKEN_EXPIRY = StringMath(ENV.APP_TOKEN_EXPIRED);
-const REFRESH_TOKEN_SECRET =
-    ENV.APP_REFRESH_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = ENV.APP_REFRESH_TOKEN_SECRET;
 const REFRESH_TOKEN_EXPIRY = StringMath(ENV.APP_REFRESH_TOKEN_EXPIRED);
 
 const ISSUER = ENV.APP_ISSUER || 'github.com/mrbontor';
@@ -15,7 +14,7 @@ const signAccessToken = (payload) => {
         const options = {
             expiresIn: TOKEN_EXPIRY,
             issuer: ISSUER,
-            audience: ISSUER,
+            audience: ISSUER
         };
         Jwt.sign({ data: payload }, TOKEN_SECRET, options, (err, token) => {
             if (err) reject(err);
@@ -42,7 +41,7 @@ const signRefreshToken = (payload) => {
         const options = {
             expiresIn: REFRESH_TOKEN_EXPIRY,
             issuer: ISSUER,
-            audience: ISSUER,
+            audience: ISSUER
         };
         Jwt.sign({ data: payload }, REFRESH_TOKEN_SECRET, options, (err, token) => {
             if (err) reject(err);
@@ -81,5 +80,5 @@ module.exports = {
     VerifyAccessToken: verifyAccessToken,
     SignRefreshToken: signRefreshToken,
     VerifyRefreshToken: verifyRefreshToken,
-    DecodeJwtToken: decodeJwtToken,
+    DecodeJwtToken: decodeJwtToken
 };
