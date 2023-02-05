@@ -36,29 +36,33 @@ class Redis {
     }
 
     async set(key, message) {
-        return await this.client.SET(key, message);
+        return await this.client.set(key, message);
     }
     async setEx(key, expire, message) {
-        return await this.client.SETEX(key, expire, message);
+        return await this.client.setEx(key, expire, message);
     }
     async get(key) {
-        return await this.client.GET(key);
+        return await this.client.get(key);
     }
 
     async del(key) {
         await this.client.del(key);
     }
 
-    async hset(key, id, message) {
-        return await this.client.HSET(key, id, message);
+    async hSet(key, id, message) {
+        return await this.client.hSet(key, id, message);
     }
 
-    async hget(key, id) {
-        return await this.client.HGET(key, id);
+    async hGet(key, id) {
+        return await this.client.hGet(key, id);
     }
 
-    async hdel(key, id) {
-        await this.client.HDEL(key, id);
+    async hGetAll(key, id) {
+        return await this.client.hGetAll(key, id);
+    }
+
+    async hDel(key, id) {
+        await this.client.hDel(key, id);
     }
 
     async end() {

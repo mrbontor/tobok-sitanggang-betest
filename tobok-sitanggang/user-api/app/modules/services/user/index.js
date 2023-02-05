@@ -51,7 +51,8 @@ const Services = {
             userName: 1,
             accountNumber: 1,
             emailAddress: 1,
-            identityNumber: 1
+            identityNumber: 1,
+            infoLogin: 1
         };
         return await UserRepository.getAllUsers(query, projection);
     },

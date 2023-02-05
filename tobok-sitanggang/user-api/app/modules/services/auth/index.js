@@ -103,6 +103,7 @@ module.exports = {
         const dataPayload = await Validator.validateSchema(payload, AuthModel.SIGNIN);
 
         const user = await UserRepository.getUserByAccountNumber(dataPayload.accountNumber);
+        console.log(user);
         if (!user) {
             throw new UnAuthorizedError();
         }

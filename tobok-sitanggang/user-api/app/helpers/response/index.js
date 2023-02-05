@@ -14,6 +14,7 @@ const BAD_REQUEST = 400;
 const UNPROCESSABLE_ENTITY = 422;
 const UNAUTHORIZED = 401;
 const ACCESS_FORBIDDEN = 403;
+const INTERNAL_SERVER_ERROR = 500;
 
 const COOKIE_REFRESH_TOKEN = 'RTOKEN';
 const COOKIE_DEVICE_ID = 'DID';
@@ -90,7 +91,8 @@ module.exports = {
 
     error: (res, error) => {
         if (isSecure) {
-            Logging.log(JSON.stringify(err.stack));
+            Logging.error(JSON.stringify(error.name));
+            Logging.error(JSON.stringify(error.message));
         }
         let response = {};
         response.status = error.status || false;
@@ -120,6 +122,10 @@ module.exports = {
                 sameSite: 'None',
                 secure: isSecure
             });
+        }
+        if (error.name === 'TypeError') {
+            error.statusCode = INTERNAL_SERVER_ERROR;
+            response.message = 'Something went wrong!, please contact administrator';
         }
 
         res.status(error.statusCode ? error.statusCode : BAD_REQUEST).send(response);

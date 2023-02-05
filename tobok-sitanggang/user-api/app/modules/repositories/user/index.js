@@ -1,5 +1,6 @@
 const Mongo = require('../../../libraries/db/mongoDb');
 const client = Mongo.getDb().db();
+const Logging = require('../../../helpers/logging');
 const CacheRepository = require('../cache');
 const { buildQueryMongoPagination, buildResponsePagination } = require('../../../helpers/mongoDbPagination');
 const {
@@ -17,10 +18,7 @@ module.exports = {
         if (!user.insertedId) {
             throw new GeneralError('Something went wrong, please try again!');
         }
-        await CacheRepository.saveReponse(data.identityNumber, {
-            _id: user.insertedId,
-            ...data
-        });
+        await CacheRepository.save(data.identityNumber, data);
 
         await client.collection(COLLECTION_NAME).createIndexes([
             { name: 'userName', key: { userName: 1 }, unique: true },
@@ -41,35 +39,40 @@ module.exports = {
         const options = { upsert: false, returnDocument: 'after' };
         const updateUser = await client.collection(COLLECTION_NAME).findOneAndUpdate(clause, data, options);
         if (!updateUser.value) throw new NotFoundError('User not found!');
-        await CacheRepository.saveReponse(identityNumber, updateUser.value);
+        await CacheRepository.save(identityNumber, updateUser.value);
         return updateUser.value;
     },
 
     updateCustom: async (filter, payload = {}) => {
-        const cache = await CacheRepository.getReponse(filter.identityNumber);
-
-        if (cache) return cache;
-
         let update = await client.collection(COLLECTION_NAME).updateOne(filter, payload);
         return update;
     },
 
     getUserByAccountNumber: async (accountNumber, projection = {}) => {
+        const cache = await CacheRepository.getAll();
+        if (cache && cache.length > 0) {
+            const result = cache.filter((el) => el.accountNumber === accountNumber)[0];
+            if (result.infoLogin) return result
+        }
+
         const user = await client.collection(COLLECTION_NAME).findOne({ accountNumber }, projection);
 
         if (!user) throw new NotFoundError('User not found!');
 
-        await CacheRepository.saveReponse(user.identityNumber, user);
+        await CacheRepository.save(user.identityNumber, user);
         return user;
     },
 
     getUserByIdentityNumber: async (identityNumber, projection = {}) => {
-        const cache = await CacheRepository.getReponse(identityNumber);
-        if (cache) return cache;
+        const cache = await CacheRepository.get(identityNumber);
+        if (cache) {
+            console.log('cached');
+            return cache;
+        }
 
         const user = await client.collection(COLLECTION_NAME).findOne({ identityNumber }, projection);
         if (!user) throw new NotFoundError('User not found!');
-        await CacheRepository.saveReponse(user.identityNumber, user);
+        await CacheRepository.get(user.identityNumber, user);
         return user;
     },
     getUserCredential: async (identityNumber, projection = {}) => {
@@ -78,16 +81,16 @@ module.exports = {
         return user;
     },
 
-    getByUserEmail: async (email, projection = {}) => {
-        return await client.collection(COLLECTION_NAME).findOne({ email: email }, projection);
-    },
-
-    findUser: async (payload, projection = {}) => {
-        return await client.collection(COLLECTION_NAME).findOne(payload, projection);
-    },
-
-    getAllUsers: async (payload = {}, projection = null) => {
-        const { search, accountNumber, identityNumber } = payload || null;
+    getAllUsers: async (payload = null, projection = null) => {
+        const { search, accountNumber, identityNumber } = payload;
+        if (identityNumber) {
+            const cache = await CacheRepository.get(identityNumber);
+            return [cache];
+        }
+        if (payload !== {}) {
+            const cache = await CacheRepository.getAll();
+            return cache;
+        }
 
         let query = {};
         let options = [{ $sort: { userName: 1 } }];
@@ -122,9 +125,6 @@ module.exports = {
         const queryUser = [{ $match: query }, ...options];
 
         const users = (await client.collection(COLLECTION_NAME).aggregate(queryUser).toArray()) || [];
-        if (users.length > 0) {
-            await CacheRepository.saveReponse('users', users);
-        }
         return users;
     },
 
