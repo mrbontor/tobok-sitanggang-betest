@@ -3,9 +3,9 @@ const StringMath = require('string-math');
 
 const ENV = process.env;
 const TOKEN_SECRET = ENV.APP_TOKEN_SECRET;
-const TOKEN_EXPIRY = StringMath(ENV.APP_TOKEN_EXPIRED);
+const TOKEN_EXPIRY = StringMath(ENV.APP_TOKEN_EXPIRED) + 'ms';
 const REFRESH_TOKEN_SECRET = ENV.APP_REFRESH_TOKEN_SECRET;
-const REFRESH_TOKEN_EXPIRY = StringMath(ENV.APP_REFRESH_TOKEN_EXPIRED);
+const REFRESH_TOKEN_EXPIRY = StringMath(ENV.APP_REFRESH_TOKEN_EXPIRED) + 'ms';
 
 const ISSUER = ENV.APP_ISSUER || 'github.com/mrbontor';
 

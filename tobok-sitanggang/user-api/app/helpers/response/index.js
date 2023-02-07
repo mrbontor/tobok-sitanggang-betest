@@ -49,14 +49,14 @@ module.exports = {
         // });
 
         res.cookie(COOKIE_REFRESH_TOKEN, data.refreshToken, {
-            httpOnly: true,
-            secure: isSecure,
+            httpOnly: isSecure,
+            secure: isSecure ? false : false,
             sameSite: 'None',
             maxAge: REFRESH_TOKEN_EXPIRY
         });
         res.cookie(COOKIE_DEVICE_ID, data.deviceId, {
-            httpOnly: true,
-            secure: isSecure,
+            httpOnly: isSecure,
+            secure: isSecure ? false : false,
             sameSite: 'None',
             maxAge: DEVICE_ID_EXPIRY
         });
@@ -70,9 +70,9 @@ module.exports = {
 
     successLogOut: (res) => {
         res.clearCookie(COOKIE_REFRESH_TOKEN, {
-            httpOnly: true,
+            httpOnly: isSecure,
             sameSite: 'None',
-            secure: isSecure
+            secure: isSecure ? false : false
         });
 
         res.sendStatus(SUCCESS_NO_CONTENT);
@@ -123,6 +123,7 @@ module.exports = {
                 secure: isSecure
             });
         }
+
         if (error.name === 'TypeError') {
             error.statusCode = INTERNAL_SERVER_ERROR;
             response.message = 'Something went wrong!, please contact administrator';

@@ -30,7 +30,7 @@ MongoHealth();
 
 //Initialize redis connection
 const confRedis = {
-    url: `redis://${ENV.REDIS_HOSTNAME}:${ENV.REDIS_PORT}/`,
+    url: `redis://${ENV.REDIS_HOSTNAME}:${ENV.REDIS_PORT}/`
     // checkpoint: 'redis-key'
 };
 

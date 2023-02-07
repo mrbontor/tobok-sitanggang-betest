@@ -52,7 +52,7 @@ module.exports = {
         const cache = await CacheRepository.getAll();
         if (cache && cache.length > 0) {
             const result = cache.filter((el) => el.accountNumber === accountNumber)[0];
-            if (result.infoLogin) return result
+            if (result.infoLogin) return result;
         }
 
         const user = await client.collection(COLLECTION_NAME).findOne({ accountNumber }, projection);
@@ -66,7 +66,6 @@ module.exports = {
     getUserByIdentityNumber: async (identityNumber, projection = {}) => {
         const cache = await CacheRepository.get(identityNumber);
         if (cache) {
-            console.log('cached');
             return cache;
         }
 
@@ -152,7 +151,7 @@ module.exports = {
     },
 
     delete: async (identityNumber) => {
-        await CacheRepository.removeResponse(identityNumber);
+        await CacheRepository.remove(identityNumber);
         return await client
             .collection(COLLECTION_NAME)
             .findOneAndDelete({ identityNumber }, { projection: { _id: 1 } });

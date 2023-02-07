@@ -68,6 +68,9 @@ class Redis {
     async end() {
         await this.client.end(true);
     }
+    async keys(pattern) {
+        return await this.client.keys(`*${pattern}*`);
+    }
 }
 
 module.exports = new Redis();

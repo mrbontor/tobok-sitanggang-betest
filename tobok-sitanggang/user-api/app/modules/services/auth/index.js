@@ -1,6 +1,6 @@
 const Validator = require('../../../helpers/validateSchema');
 const { AuthModel } = require('../../models');
-const { UserRepository } = require('../../repositories');
+const { UserRepository, CacheRepository } = require('../../repositories');
 const { Encrypt, Decrypt, VerifyHashPassword } = require('../../../libraries/encrypting/AEAD');
 const {
     SignAccessToken,
@@ -29,86 +29,68 @@ const setJwtPayload = (data) => {
 
 /**
  *
+ * @param {Number} identityNumber
+ * @param {UUID} deviceId
+ * @returns
+ */
+const keyAuthSession = (identityNumber, deviceId) => {
+    return `${identityNumber}_${deviceId}`;
+};
+
+/**
+ *
  * @param {object} dataUser
  * @param {object} userPayload
- * @param {string} loginId
  */
-const generateToken = async (dataUser, userPayload, loginId) => {
-    const { deviceId } = userPayload;
+const generateToken = async (dataUser, userPayload) => {
+    const { deviceId, identityNumber } = userPayload;
 
     const payload = setJwtPayload(dataUser);
 
     const accessToken = await SignAccessToken(payload);
     const refreshToken = await SignRefreshToken(
         Encrypt({
-            accountNumber: dataUser.accountNumber,
-            loginId: loginId
+            // accountNumber: dataUser.accountNumber,
+            identityNumber: dataUser.identityNumber,
+            deviceId: deviceId
         })
     );
+
+    const authKey = keyAuthSession(dataUser.identityNumber, deviceId);
+    //JWT expired base on config APP_REFRESH_TOKEN_EXPIRED in .env
+    await CacheRepository.saveSession(authKey, refreshToken);
 
     const now = Dayjs();
     const modified = now.format();
 
-    const clause = { $or: [{ _id: dataUser._id }] };
-    //identify existing token and replace
-    let oldRefreshToken = [];
-    if (typeof dataUser.token !== 'undefined') {
-        oldRefreshToken = dataUser.token.filter(
-            (el) => el.token === userPayload.refreshToken && el.deviceId === userPayload.deviceId // maybe need to removed.
-        );
-
-        /*
-            check existing token at the same device
-            Scenario :
-            1) User logs in but never uses RT and does not logout
-            2) RT is stolen
-            3) If 1 & 2, reuse detection is needed to clear all RTs when user logs in
-        */
-
-        if (oldRefreshToken.length > 0) {
-            // clause.$or.push({ "token.$.loginID": userPayload.refreshToken });
-            await UserRepository.updateCustom(
-                clause,
-                {
-                    $pull: {
-                        token: { token: userPayload.refreshToken }
-                    }
-                },
-                { multi: true }
-            );
-        }
-    }
-
-    // store new refresh token
-    const dataSet = {
-        $set: { modified: modified },
+    // store info device login
+    const dataDivece = {
+        $set: { lastLogin: modified },
         $push: {
-            token: {
-                token: refreshToken,
+            divices: {
                 ipAddress: userPayload.ipAddress,
                 userAgent: userPayload.userAgent,
-                deviceId: userPayload.deviceId,
-                updateAt: modified
+                deviceId: deviceId,
+                updatedAt: modified
             }
         }
     };
 
-    await UserRepository.updateCustom(clause, dataSet);
+    await UserRepository.updateCustom({ identityNumber }, dataDivece);
 
     return { accessToken, refreshToken, deviceId };
 };
 
 module.exports = {
     signIn: async (payload) => {
-        const dataPayload = await Validator.validateSchema(payload, AuthModel.SIGNIN);
+        const payloadValid = await Validator.validateSchema(payload, AuthModel.SIGNIN);
 
-        const user = await UserRepository.getUserByAccountNumber(dataPayload.accountNumber);
-        console.log(user);
+        const user = await UserRepository.getUserByAccountNumber(payloadValid.accountNumber);
         if (!user) {
             throw new UnAuthorizedError();
         }
 
-        const isPasswordValid = VerifyHashPassword(user.infoLogin, dataPayload.password);
+        const isPasswordValid = VerifyHashPassword(user.infoLogin, payloadValid.password);
         if (!isPasswordValid) {
             // throw new BadRequestError("Incorect Password or Username!");
             throw new UnAuthorizedError();
@@ -116,7 +98,7 @@ module.exports = {
 
         const loginId = Uuidv4();
 
-        const token = await generateToken(user, dataPayload, loginId);
+        const token = await generateToken(user, payloadValid, loginId);
 
         return token;
     },
@@ -127,80 +109,47 @@ module.exports = {
      */
     refreshToken: async (payload) => {
         try {
-            const dataPayload = await Validator.validateSchema(payload, AuthModel.REFRESH_TOKEN);
+            const payloadValid = await Validator.validateSchema(payload, AuthModel.REFRESH_TOKEN);
 
-            const isTokenValid = await VerifyRefreshToken(dataPayload.refreshToken);
+            const isTokenValid = await VerifyRefreshToken(payloadValid.refreshToken);
 
             const decryptedPayload = JSON.parse(Decrypt(isTokenValid.data));
 
-            const user = await UserRepository.getUserByAccountNumber(decryptedPayload.accountNumber);
+            const user = await UserRepository.getUserByIdentityNumber(decryptedPayload.identityNumber);
             if (!user) {
                 throw new ForbiddenError();
             }
 
-            const clause = { accountNumber: decryptedPayload.accountNumber };
+            const clause = { identityNumber: decryptedPayload.identityNumber };
 
-            //check token exist
-            let oldRefreshToken = [];
-            if (typeof user.token !== 'undefined' && user.token.length > 0) {
-                oldRefreshToken = user.token.filter((el) => el.token === dataPayload.refreshToken);
-
-                if (oldRefreshToken.length > 0) {
-                    //remove current refresh token
-                    await UserRepository.updateCustom(clause, {
-                        $pull: {
-                            token: { token: dataPayload.refreshToken }
-                        }
-                    });
-                }
-            } else {
-                //the token has stolen, he mess with us
-                throw new ForbiddenError();
+            //check token stored
+            const authKey = keyAuthSession(decryptedPayload.identityNumber, payloadValid.deviceId);
+            const getCurrentRefreshToken = await CacheRepository.getSession(authKey);
+            if (!getCurrentRefreshToken) {
+                throw new ForbiddenError('Nice try :-');
             }
 
-            const jwtPayload = setJwtPayload(user);
+            //remove currentToken
+            await CacheRepository.removeSession(authKey);
 
-            //valid, generate new access token
-            const newAccessToken = await SignAccessToken(jwtPayload);
-            const newRefreshToken = await SignRefreshToken(
-                Encrypt({
-                    accountNumber: user.accountNumber,
-                    loginId: Uuidv4()
-                })
-            );
-            const now = Dayjs();
-            const modified = now.format();
+            //genereta new accessToken and refreshToken
+            const token = await generateToken(user, payloadValid);
 
-            const dataSet = {
-                $set: { modified: modified },
-                $push: {
-                    token: {
-                        token: newRefreshToken,
-                        ipAddress: dataPayload.ipAddress,
-                        userAgent: dataPayload.userAgent,
-                        deviceId: dataPayload.deviceId
-                    }
-                }
-            };
-
-            await UserRepository.updateCustom(clause, dataSet);
-
-            return {
-                accessToken: newAccessToken,
-                refreshToken: newRefreshToken,
-                deviceId: dataPayload.deviceId
-            };
+            return token;
         } catch (err) {
             //detect reuse token, anomaly
             if (err.message === 'jwt expired') {
                 const expiredToken = await DecodeJwtToken(payload.refreshToken);
                 const decodeExpiredToken = JSON.parse(Decrypt(expiredToken.data));
 
-                //remove all token
-                await UserRepository.updateCustom(
-                    { accountNumber: decodeExpiredToken.accountNumber },
-                    { $unset: { token: 1 } }
-                );
+                // remove token from cache
+                const authKey = keyAuthSession(decryptedPayload.identityNumber, payloadValid.deviceId);
+                await CacheRepository.removeSession(authKey);
+                //remove info device from db
+                // await UserRepository.updateCustom(
+                //     { accountNumber: decodeExpiredToken.accountNumber },
+                //     { $unset: { devices: 1 } }
+                // );
 
                 throw new ForbiddenError();
             } else {
@@ -210,43 +159,35 @@ module.exports = {
     },
 
     signOut: async (payload) => {
-        const dataPayload = await Validator.validateSchema(payload, AuthModel.SIGNOUT);
+        const payloadValid = await Validator.validateSchema(payload, AuthModel.SIGNOUT);
 
-        const isTokenValid = await VerifyRefreshToken(dataPayload.refreshToken);
+        const isTokenValid = await VerifyRefreshToken(payloadValid.refreshToken);
 
         const decryptedPayload = JSON.parse(Decrypt(isTokenValid.data));
 
-        const user = await UserRepository.getUserByAccountNumber(decryptedPayload.accountNumber);
+        const user = await UserRepository.getUserByIdentityNumber(decryptedPayload.identityNumber);
         if (!user) {
             throw new UnAuthorizedError();
         }
 
-        let removeToken = {};
+        const authKey = keyAuthSession(decryptedPayload.identityNumber, payloadValid.deviceId);
+        await CacheRepository.removeSession(authKey);
 
-        //check token exist
-        let oldRefreshToken = [];
-        if (typeof user.token !== 'undefined') {
-            oldRefreshToken = user.token.filter((el) => el.token === dataPayload.refreshToken);
-
-            if (oldRefreshToken.length > 0) {
-                removeToken = {
-                    $pull: {
-                        token: { token: dataPayload.refreshToken }
-                    }
-                };
-            } else {
-                return true;
-            }
-        }
-
-        //Alldevices = true, remove all token
-        if (dataPayload.allDevices) {
-            removeToken = {
-                $unset: { token: 1 }
+        //Alldevices = true, remove all info devices and refresh token
+        let removeDevice = {};
+        if (payloadValid.allDevices) {
+            removeDevice = { $unset: { devices: 1 } };
+            await CacheRepository.removeAllActiveSession(decryptedPayload.identityNumber);
+        } else {
+            // logout current device
+            removeDevice = {
+                $pull: {
+                    devices: { devices: payloadValid.deviceId }
+                }
             };
+            await CacheRepository.removeSession(decryptedPayload.identityNumber);
         }
-
-        await UserRepository.updateCustom({ accountNumber: decryptedPayload.accountNumber }, removeToken);
+        await UserRepository.updateCustom({ accountNumber: decryptedPayload.accountNumber }, removeDevice);
 
         return true;
     }
